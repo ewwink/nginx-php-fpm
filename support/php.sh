@@ -20,7 +20,7 @@ fi
 
 echo "-----> Packaging PHP $PHP_VERSION"
 
-tempdir="$( mktemp -t php_xxxx )"
+tempdir="$( mktemp -t php_XXXXXXXXX )"
 rm -rf $tempdir
 mkdir -p $tempdir
 cd $tempdir
