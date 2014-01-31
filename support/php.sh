@@ -46,17 +46,18 @@ cd ../php-${PHP_VERSION}
 ./configure --disable-all \
 			--prefix=/app/vendor/php \
 			--with-config-file-path=/app/vendor/php/etc \
-			--with-config-file-scan-dir=/app/vendor/php/etc/conf.d \
-			--with-gd --with-zlib=/app/vendor/php/zlib --with-openssl \
-			--enable-xmlreader \
-			--with-xmlrpc \
-			--with-curl=/usr \
+			--with-config-file-scan-dir=/app/vendor/php/etc.d \
+			--with-gd --with-zlib=/app/vendor/php/zlib \
+			--with-openssl \
+			--with-curl= \
 			--enable-fpm \
+			--enable-mbregex \
 			--enable-mbstring \
 			--enable-sockets \
-			--with-readline \
 			--with-mcrypt=/app/vendor/libmcrypt \
-			--disable-debug --enable-opcache \
+			--disable-debug \
+			--enable-opcache \
+			--with-iconv \
 			--with-mysqli \
 			--enable-mysqlnd \
 			--enable-session \
