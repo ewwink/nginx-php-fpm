@@ -8,7 +8,10 @@ E_ARG_MISSING=127
 E_S3_BUCKET_MISSING=2
 
 basedir="$( cd -P "$( dirname "$0" )" && pwd )"
-source "$basedir/../conf/buildpack.conf"
+
+## EDIT
+source ./set-env.sh
+## END EDIT
 
 export PATH=${basedir}/../vendor/bin:$PATH
 
