@@ -28,6 +28,11 @@ echo "+ Fetching freetype libraries..."
 mkdir -p /app/local
 curl -L "http://download.savannah.gnu.org/releases/freetype/freetype-${LIFREETYPE_VERSION}.tar.gz" -o - | tar xz -C /app/local
 
+tempdir="$( mktemp -t php_XXXXXXXX )"
+rm -rf $tempdir
+mkdir -p $tempdir
+cd $tempdir
+
 echo "+ Fetching PHP sources..."
 #fetch php, extract
 curl -L http://us.php.net/get/php-$PHP_VERSION.tar.bz2/from/www.php.net/mirror -o - | tar xj
@@ -109,5 +114,22 @@ echo ${PHP_VERSION} > /app/vendor/php/VERSION
 
 popd
 
-echo "+ Done!"
+cd /app/vendor/php
+tar -cvzf $tempdir/php-${PHP_VERSION}.tgz .
+
+"$basedir/checksum.sh" "$tempdir/php-${nginx_version}.tgz"
+
+echo "-----> Done building PHP package! saved as $tempdir/php-${phpversion}.tgz"
+
+echo "-----------------------------------------------"
+
+echo "---> Uploading package to FTP Server"
+while true; do
+    read -p "Do you wish to to Upload to FTP Server (y/n)?" yn
+    case ${yn} in
+        [Yy]* ) "$basedir/ftp-upload" "$tempdir/php-${PHP_VERSION}.tgz"; break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
 
