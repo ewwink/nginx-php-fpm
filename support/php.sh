@@ -94,7 +94,7 @@ echo "---> Uploading package to FTP Server"
 while true; do
     read -p "Do you wish to to Upload to FTP Server (y/n)?" yn
     case ${yn} in
-        [Yy]* ) "$basedir/ftp-upload" "$tempdir/php-${php_version}.tgz"; break;;
+        [Yy]* ) "$basedir/ftp-upload.sh" "$tempdir/php-${php_version}.tgz"; break;;
         [Nn]* ) exit;;
         * ) echo "Please answer yes or no.";;
     esac
