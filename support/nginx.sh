@@ -10,7 +10,7 @@ E_S3_BUCKET_MISSING=2
 basedir="$( cd -P "$( dirname "$0" )" && pwd )"
 
 ## EDIT
-source support/set-env.sh
+source ./support/set-env.sh
 ## END EDIT
 
 export PATH=${basedir}/../vendor/bin:$PATH
