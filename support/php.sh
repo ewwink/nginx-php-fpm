@@ -43,31 +43,28 @@ cd zlib-${PHP_ZLIB_VERSION} &&
 ./configure --prefix=/app/vendor/php/zlib && make && make install
 cd ../php-${PHP_VERSION}
 
+./configure --disable-all \
+			--prefix=/app/vendor/php \
+			--with-config-file-path=/app/vendor/php/etc \
+			--with-config-file-scan-dir=/app/vendor/php/etc/conf.d \
+			--with-gd --with-zlib=/app/vendor/php/zlib --with-openssl \
+			--enable-xmlreader \
+			--with-xmlrpc \
+			--with-curl=/usr \
+			--enable-fpm \
+			--enable-mbstring \
+			--enable-sockets \
+			--with-readline \
+			--with-mcrypt=/app/vendor/libmcrypt \
+			--disable-debug --enable-opcache \
+			--with-mysqli \
+			--enable-mysqlnd \
+			--enable-session \
+			--enable-json \
+			--enable-filter \
+			--enable-fileinfo \
+			--enable-libxml
 
-./configure --prefix=/app/vendor/php \
-	--disable-all \
-    --with-config-file-path=/app/vendor/php/etc \
-    --with-config-file-scan-dir=/app/vendor/php/etc/conf.d \
-    --with-gd \
-    --with-zlib=/app/vendor/php/zlib \
-    --with-openssl \
-    --enable-xmlreader \
-    --with-xmlrpc \
-    --with-curl=/usr \
-    --enable-fpm \
-    --enable-mbstring \
-    --enable-sockets \
-    --enable-bcmath \
-    --with-readline \
-    --with-mcrypt=/app/vendor/libmcrypt \
-    --disable-debug \
-	--enable-opcache \
-	--with-mysqli \
-	--enable-mysqlnd \
-	--enable-session \
-	--enable-json \
-	--enable-filter \ 
-	--enable-fileinfo
 make 
 make install /app/vendor/php/bin/pear config-set php_dir /app/vendor/php
 
