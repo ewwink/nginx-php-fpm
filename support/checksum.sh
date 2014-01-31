@@ -4,7 +4,7 @@ set -e
 
 basedir="$( cd -P "$( dirname "$0" )" && pwd )"
 ## EDIT
-source ./set-env.sh
+source ./support/set-env.sh
 ## END EDIT
 
 package="$1"
