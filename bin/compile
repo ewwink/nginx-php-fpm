@@ -5,28 +5,25 @@ set -e
 set -o pipefail
 
 # START CONFIG
-NGINX_VERSION=1.4.1
+NGINX_VERSION=1.5.9
 LIBMCRYPT_VERSION=2.5.8
-LIBMEMCACHED_VERSION=1.0.7
-PHP_VERSION=5.4.17
-NEWRELIC_VERSION=2.9.5.78
-S3_BUCKET=heroku-buildpack-php-tyler
+PHP_VERSION=5.5.8
+NEWRELIC_VERSION=4.4.5.35
+S3_BUCKET=public_html/nginx-php-fpm
 # END CONFIG
 
 #
-S3_URL="https://s3.amazonaws.com/${S3_BUCKET}"
+S3_URL="http://lyric.net23.net/${S3_BUCKET}"
 
 MANIFEST_FILE="manifest.md5sum"
 NGINX_FILE="nginx-${NGINX_VERSION}-heroku.tar.gz"
 MCRYPT_FILE="libmcrypt-${LIBMCRYPT_VERSION}.tar.gz"
-MEMCACHED_FILE="libmemcached-${LIBMEMCACHED_VERSION}.tar.gz"
 PHP_FILE="php-${PHP_VERSION}-with-fpm-heroku.tar.gz"
 NEWRELIC_FILE="newrelic-${NEWRELIC_VERSION}-heroku.tar.gz"
 
 MANIFEST_URL="${S3_URL}/${MANIFEST_FILE}"
 NGINX_URL="${S3_URL}/${NGINX_FILE}"
 MCRYPT_URL="${S3_URL}/${MCRYPT_FILE}"
-MEMCACHED_URL="${S3_URL}/${MEMCACHED_FILE}"
 PHP_URL="${S3_URL}/${PHP_FILE}"
 NEWRELIC_URL="${S3_URL}/${NEWRELIC_FILE}"
 COMPOSER_URL="http://getcomposer.org/composer.phar"
@@ -120,25 +117,6 @@ fi
 
 tar xzf ${MCRYPT_FILE} -C ${BUILD_DIR}/local
 
-# libmemcached
-echo "-----> Installing libmemcached"
-if [ -f "${MEMCACHED_FILE}" ]
-then
-	if check_md5 "${MEMCACHED_FILE}"
-	then
-		echo "Bundling libmemcached v${LIBMEMCACHED_VERSION}" | indent
-		echo ${MEMCACHED_URL} | indent
-		download_url ${MEMCACHED_URL}
-	else
-		echo "Using cached libmemcached v${LIBMEMCACHED_VERSION}" | indent
-	fi
-else
-	echo "Bundling libmemcached v${LIBMEMCACHED_VERSION}" | indent
-	echo ${MEMCACHED_URL} | indent
-	download_url ${MEMCACHED_URL}
-fi
-
-tar xzf ${MEMCACHED_FILE} -C ${BUILD_DIR}/local
 
 # PHP
 echo "-----> Installing PHP"
