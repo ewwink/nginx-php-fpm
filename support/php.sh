@@ -36,8 +36,7 @@ tar -xzvf "php-${PHP_VERSION}.tar.gz"
 
 mkdir -p "/app/vendor/php/zlib" "/app/vendor/libmcrypt"
 
-curl "http://chh-heroku-buildpack-php.s3.amazonaws.com/package/libmcrypt-${mcrypt_version}.tgz"
-tar xzv -C /app/vendor/libmcrypt
+curl "http://chh-heroku-buildpack-php.s3.amazonaws.com/package/libmcrypt-2.5.8.tgz" | tar xzv -C /app/vendor/libmcrypt
 
 mkdir -p "/app/vendor/php/etc/conf.d"
 cd zlib-${PHP_ZLIB_VERSION} && 
