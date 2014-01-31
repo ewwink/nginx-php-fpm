@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## EDIT
-source ./set-env.sh
+source ./support/set-env.sh
 ## END EDIT
 
 set -e
