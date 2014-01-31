@@ -25,9 +25,9 @@ rm -rf $tempdir
 mkdir -p $tempdir
 cd $tempdir
 
-echo "-----> Downloading dependency zlib ${zlib_version}"
+echo "-----> Downloading dependency zlib ${PHP_ZLIB_VERSION}"
 
-curl -LO "http://zlib.net/zlib-${zlib_version}.tar.gz"
+curl -LO "http://zlib.net/zlib-${PHP_ZLIB_VERSION}.tar.gz"
 tar -xzvf "zlib-${PHP_ZLIB_VERSION}.tar.gz"
 
 echo "-----> Downloading PHP $PHP_VERSION"
