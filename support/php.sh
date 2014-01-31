@@ -47,7 +47,6 @@ cd ../php-${PHP_VERSION}
     --with-config-file-path=/app/vendor/php/etc \
     --with-config-file-scan-dir=/app/vendor/php/etc/conf.d \
     --with-gd \
-    --enable-shmop \
     --enable-zip \
     --with-jpeg-dir=/usr \
     --with-png-dir=/usr \
