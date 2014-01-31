@@ -164,7 +164,7 @@ popd > /dev/null
 echo "-----> Copying config files"
 cp $LP_DIR/conf/php-fpm.conf ${BUILD_DIR}/vendor/php/etc/php-fpm.conf
 cp ${BUILD_DIR}/vendor/php/php/fpm/status.html ${BUILD_DIR}/status.html
-cp $LP_DIR/conf/php.ini ${BUILD_DIR}/vendor/php/php.ini
+cp $LP_DIR/conf/php.ini ${BUILD_DIR}/vendor/php/etc/php.ini
 cp -a $LP_DIR/conf/etc.d ${BUILD_DIR}/vendor/php/
 cp $LP_DIR/conf/nginx.conf.erb ${BUILD_DIR}/vendor/nginx/conf/nginx.conf.erb
 cp -n ${LP_DIR}/.profile.d/* ${BUILD_DIR}/.profile.d/
@@ -191,7 +191,7 @@ if [ -d /app/conf ]; then
 	fi
 
 	if [ -r /app/conf/php.ini ]; then
-		cp -f /app/conf/php.ini /app/vendor/php/php.ini
+		cp -f /app/conf/php.ini /app/vendor/php/etc/php.ini
 	fi
 
 	if [ -r /app/conf/nginx.conf.erb ]; then
