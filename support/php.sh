@@ -76,11 +76,11 @@ make && make install
 echo "-----> Uploading source to build server"
 
 cd /app/vendor/php
-tar -cvzf $tempdir/php-${PHP_VERSION}.tgz .
+tar -cvzf $tempdir/php-${PHP_VERSION}-with-fpm.tgz .
 
-"$basedir/checksum.sh" "$tempdir/php-${PHP_VERSION}.tgz"
+"$basedir/checksum.sh" "$tempdir/php-${PHP_VERSION}-with-fpm.tgz"
 
-echo "-----> Done building PHP package! saved as $tempdir/php-${PHP_VERSION}.tgz"
+echo "-----> Done building PHP package! saved as $tempdir/php-${PHP_VERSION}-with-fpm.tgz"
 
 echo "-----------------------------------------------"
 
@@ -88,7 +88,7 @@ echo "---> Uploading package to FTP Server"
 while true; do
     read -p "Do you wish to to Upload to FTP Server (y/n)?" yn
     case ${yn} in
-        [Yy]* ) "$basedir/ftp-upload.sh" "$tempdir/php-${PHP_VERSION}.tgz"; break;;
+        [Yy]* ) "$basedir/ftp-upload.sh" "$tempdir/php-${PHP_VERSION}-with-fpm.tgz"; break;;
         [Nn]* ) exit;;
         * ) echo "Please answer yes or no.";;
     esac

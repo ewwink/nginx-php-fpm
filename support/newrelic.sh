@@ -3,14 +3,14 @@
 set -e
 
 if [ "$NEWRELIC_VERSION" == "" ]; then
-  echo "must set NEWRELIC_VERSION, i.e NEWRELIC_VERSION=2.8.5.73"
+  echo "must set NEWRELIC_VERSION, i.e NEWRELIC_VERSION=4.4.5.35"
   exit 1
 fi
 
 basedir="$( cd -P "$( dirname "$0" )" && pwd )"
 
 # make a temp directory
-tempdir="$( mktemp -t newrelic_XXXX )"
+tempdir="$( mktemp -t newrelic_XXXXXXXX )"
 installdir=$tempdir/install
 rm -rf $tempdir
 mkdir -p $tempdir

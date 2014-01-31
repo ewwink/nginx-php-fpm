@@ -5,27 +5,25 @@ set -e
 set -o pipefail
 
 # START CONFIG
-NGINX_VERSION=1.5.9
-LIBMCRYPT_VERSION=2.5.8
-PHP_VERSION=5.5.8
-NEWRELIC_VERSION=4.4.5.35
-S3_BUCKET=public_html/nginx-php-fpm
+basedir="$( cd -P "$( dirname "$0" )" && pwd )"
+source "$basedir/../support/set-env.sh"
+
 # END CONFIG
 
 #
-S3_URL="http://lyric.net23.net/${S3_BUCKET}"
+FTP_URL="http://${FTP_HOST}${FTP_DIR}"
 
 MANIFEST_FILE="manifest.md5sum"
-NGINX_FILE="nginx-${NGINX_VERSION}-heroku.tar.gz"
-MCRYPT_FILE="libmcrypt-${LIBMCRYPT_VERSION}.tar.gz"
-PHP_FILE="php-${PHP_VERSION}-with-fpm-heroku.tar.gz"
+NGINX_FILE="nginx-${NGINX_VERSION}.tgz"
+MCRYPT_FILE="libmcrypt-${LIBMCRYPT_VERSION}.tgz"
+PHP_FILE="php-${PHP_VERSION}-with-fpm.tgz"
 NEWRELIC_FILE="newrelic-${NEWRELIC_VERSION}-heroku.tar.gz"
 
-MANIFEST_URL="${S3_URL}/${MANIFEST_FILE}"
-NGINX_URL="${S3_URL}/${NGINX_FILE}"
-MCRYPT_URL="${S3_URL}/${MCRYPT_FILE}"
-PHP_URL="${S3_URL}/${PHP_FILE}"
-NEWRELIC_URL="${S3_URL}/${NEWRELIC_FILE}"
+MANIFEST_URL="${FTP_URL}/${MANIFEST_FILE}"
+NGINX_URL="${FTP_URL}/${NGINX_FILE}"
+MCRYPT_URL="${FTP_URL}/${MCRYPT_FILE}"
+PHP_URL="${FTP_URL}/${PHP_FILE}"
+NEWRELIC_URL="${FTP_URL}/${NEWRELIC_FILE}"
 COMPOSER_URL="http://getcomposer.org/composer.phar"
 #
 

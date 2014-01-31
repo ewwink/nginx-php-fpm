@@ -9,5 +9,5 @@ package="$1"
 
 echo "--> Creating checksum for ${package}"
 
-md5sum -b "${package}" > "${package}.md5"
-echo "----> File MD5 checksum ${package}.md5"
+md5sum -b "${package}" >> "/tmp/manifest.md5sum"
+echo "----> File MD5 checksum appended to manifest.md5sum"
