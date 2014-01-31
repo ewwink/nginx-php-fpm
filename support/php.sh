@@ -46,7 +46,6 @@ cd ../php-${PHP_VERSION}
 ./configure --prefix=/app/vendor/php \
     --with-config-file-path=/app/vendor/php/etc \
     --with-config-file-scan-dir=/app/vendor/php/etc/conf.d \
-    --enable-intl \
     --with-gd \
     --enable-shmop \
     --enable-zip \
