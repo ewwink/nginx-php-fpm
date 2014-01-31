@@ -34,13 +34,11 @@ echo "-----> Downloading PHP $PHP_VERSION"
 curl -LO "http://php.net/distributions/php-${PHP_VERSION}.tar.gz"
 tar -xzvf "php-${PHP_VERSION}.tar.gz"
 
-mkdir -p "/app/vendor/php/zlib" "/app/vendor/libmcrypt" "/app/vendor/libicu"
-curl "http://${S3_BUCKET}.s3.amazonaws.com/package/libicu-51.tgz"
-tar xzv -C /app/vendor/libicu
-curl "http://${S3_BUCKET}.s3.amazonaws.com/package/libmcrypt-${mcrypt_version}.tgz"
+mkdir -p "/app/vendor/php/zlib" "/app/vendor/libmcrypt"
+
+curl "http://chh-heroku-buildpack-php.s3.amazonaws.com/package/libmcrypt-${mcrypt_version}.tgz"
 tar xzv -C /app/vendor/libmcrypt
-export LD_LIBRARY_PATH=/app/vendor/libicu/lib
-export PATH=/app/vendor/libicu/bin:\$PATH
+
 mkdir -p "/app/vendor/php/etc/conf.d"
 cd zlib-${PHP_ZLIB_VERSION} && 
 ./configure --prefix=/app/vendor/php/zlib && make && make install
