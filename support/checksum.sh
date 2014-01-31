@@ -3,7 +3,9 @@
 set -e
 
 basedir="$( cd -P "$( dirname "$0" )" && pwd )"
-source "$basedir/../conf/buildpack.conf"
+## EDIT
+source ./set-env.sh
+## END EDIT
 
 package="$1"
 
