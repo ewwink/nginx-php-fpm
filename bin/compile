@@ -17,13 +17,11 @@ MANIFEST_FILE="manifest.md5sum"
 NGINX_FILE="nginx-${NGINX_VERSION}.tgz"
 MCRYPT_FILE="libmcrypt-${LIBMCRYPT_VERSION}.tgz"
 PHP_FILE="php-${PHP_VERSION}-with-fpm.tgz"
-NEWRELIC_FILE="newrelic-${NEWRELIC_VERSION}-heroku.tar.gz"
 
 MANIFEST_URL="${FTP_URL}/${MANIFEST_FILE}"
 NGINX_URL="${FTP_URL}/${NGINX_FILE}"
 MCRYPT_URL="${FTP_URL}/${MCRYPT_FILE}"
 PHP_URL="${FTP_URL}/${PHP_FILE}"
-NEWRELIC_URL="${FTP_URL}/${NEWRELIC_FILE}"
 COMPOSER_URL="http://getcomposer.org/composer.phar"
 #
 
@@ -139,28 +137,6 @@ tar xzf ${PHP_FILE} -C ${BUILD_DIR}/vendor/php
 export PATH="${PATH}:${BUILD_DIR}/vendor/php/bin"
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${BUILD_DIR}/local/lib"
 
-# newrelic
-echo "-----> Installing newrelic"
-if [ -f "${NEWRELIC_FILE}" ]
-then
-	if check_md5 "${NEWRELIC_FILE}"
-	then
-		echo "Bundling newrelic daemon v${NEWRELIC_VERSION}" | indent
-		echo ${NEWRELIC_URL} | indent
-		download_url ${NEWRELIC_URL}
-	else
-		echo "Using cached newrelic daemon v${NEWRELIC_VERSION}" | indent
-	fi
-else
-	echo "Bundling newrelic daemon v${NEWRELIC_VERSION}" | indent
-	echo ${NEWRELIC_URL} | indent
-	download_url ${NEWRELIC_URL}
-fi
-
-tar xzf ${NEWRELIC_FILE} -C ${BUILD_DIR}/local
-
-popd > /dev/null
-
 # Composer Installation
 pushd ${BUILD_DIR} > /dev/null
 if [ -f "composer.json" ]
@@ -238,11 +214,6 @@ if [ -d /app/conf/nginx.d ]; then
 	done
 fi
 
-# Set NEWRELIC key
-if [ -x "/app/local/bin/newrelic-license" ]; then
-	/app/local/bin/newrelic-license
-fi
-
 # Preserve current php-fpm.conf so that env list does
 # not go out of hand across restarts.
 if [ -r /app/vendor/php/etc/php-fpm.conf.current ]; then
@@ -256,13 +227,10 @@ for var in \`env | cut -f1 -d=\`; do
 	echo "env[\$var] = \\$\${var}" >> /app/vendor/php/etc/php-fpm.conf
 done
 
-touch /app/vendor/nginx/logs/access.log /app/vendor/nginx/logs/error.log /app/vendor/php/var/log/php-fpm.log /app/vendor/php/var/log/php-errors.log /app/local/var/log/newrelic/newrelic-daemon.log /app/local/var/log/newrelic/php_agent.log
+touch /app/vendor/nginx/logs/access.log /app/vendor/nginx/logs/error.log /app/vendor/php/var/log/php-fpm.log /app/vendor/php/var/log/php-errors.log
 mkdir -p client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp
-(tail -f -n 0 /app/vendor/nginx/logs/*.log /app/vendor/php/var/log/*.log /app/local/var/log/newrelic/*.log &)
+(tail -f -n 0 /app/vendor/nginx/logs/*.log /app/vendor/php/var/log/*.log &)
 
-if [ "\${NEW_RELIC_LICENSE_KEY}" ]; then
-	/app/local/bin/newrelic-daemon -c /app/local/etc/newrelic.cfg -d error
-fi
 /app/vendor/php/sbin/php-fpm
 /app/vendor/nginx/sbin/nginx
 EOF
