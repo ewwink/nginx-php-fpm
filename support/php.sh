@@ -1,135 +1,104 @@
-#!/bin/bash
-
-## EDIT
-source ./set-env.sh
-## END EDIT
+#!/usr/bin/env bash
 
 set -e
 
-if [ "$PHP_VERSION" == "" ]; then
-  echo "must set PHP_VERSION, i.e PHP_VERSION=5.5.8"
-  exit 1
+basedir="$( cd -P "$( dirname "$0" )" && pwd )"
+source "$basedir/../support/set-env.sh"
+
+export PATH=${basedir}/../vendor/bin:$PATH
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <version>" >&2
+    exit 1
 fi
 
-DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+php_version="$1"
+mcrypt_version="2.5.8"
 
-set -o pipefail
+if [ -z "$PHP_ZLIB_VERSION" ]; then
+    PHP_ZLIB_VERSION=1.2.8
+fi
 
-orig_dir=$( pwd )
+echo "-----> Packaging PHP $php_version"
 
-mkdir -p build && pushd build
-
-echo "+ Fetching libmcrypt libraries..."
-# install mcrypt for portability.
-mkdir -p /app/local
-curl -L "https://s3.amazonaws.com/${S3_BUCKET}/libmcrypt-${LIBMCRYPT_VERSION}.tar.gz" -o - | tar xz -C /app/local
-
-echo "+ Fetching freetype libraries..."
-mkdir -p /app/local
-curl -L "http://download.savannah.gnu.org/releases/freetype/freetype-${LIFREETYPE_VERSION}.tar.gz" -o - | tar xz -C /app/local
-
-tempdir="$( mktemp -t php_XXXXXXXX )"
+tempdir="$( mktemp -t php_xxxx )"
 rm -rf $tempdir
 mkdir -p $tempdir
 cd $tempdir
 
-echo "+ Fetching PHP sources..."
-#fetch php, extract
-curl -L http://us.php.net/get/php-$PHP_VERSION.tar.bz2/from/www.php.net/mirror -o - | tar xj
+echo "-----> Downloading dependency zlib ${zlib_version}"
 
-pushd php-$PHP_VERSION
+curl -LO "http://zlib.net/zlib-${zlib_version}.tar.gz"
+tar -xzvf "zlib-${PHP_ZLIB_VERSION}.tar.gz"
 
-echo "+ Configuring PHP..."
-# new configure command
-## WARNING: libmcrypt needs to be installed.
-./configure \
---prefix=/app/vendor/php \
---with-config-file-path=/app/vendor/php \
---with-config-file-scan-dir=/app/vendor/php/etc.d \
---disable-debug \
---disable-rpath \
---enable-fpm \
---enable-gd-native-ttf \
---enable-inline-optimization \
---enable-libxml \
---enable-mbregex \
---enable-mbstring \
---enable-pcntl \
---enable-soap=shared \
---enable-zip \
---with-bz2 \
---with-curl \
---with-gd \
---with-gettext \
---with-jpeg-dir \
---with-mcrypt=/app/local \
---with-iconv \
---with-mhash \
---with-mysql \
---with-mysqli \
---with-openssl \
---with-pcre-regex \
---with-pdo-mysql \
---with-pgsql \
---with-pdo-pgsql \
---with-png-dir \
---with-freetype-dir=/app/local \
---with-zlib \
---enable-opcache
+echo "-----> Downloading PHP $php_version"
+curl -LO "http://php.net/distributions/php-${php_version}.tar.gz"
+tar -xzvf "php-${php_version}.tar.gz"
 
-echo "+ Compiling PHP..."
-# build & install it
-make install
+install_zend_optimizer=":"
 
-popd
+if [[ "$php_version" =~ 5.5 ]]; then
+    install_zend_optimizer=$(cat << SH
+    echo "zend_extension=opcache.so" >> /app/vendor/php/etc/conf.d/opcache.ini
+SH
+)
+else
+    install_zend_optimizer=$(cat <<SH
+    /app/vendor/php/bin/pecl install ZendOpcache-beta \
+        && echo "zend_extension=\$(/app/vendor/php/bin/php-config --extension-dir)/opcache.so" >> /app/vendor/php/etc/conf.d/opcache.ini
+SH
+)
+fi
 
-# update path
-export PATH=/app/vendor/php/bin:$PATH
+mkdir -p "/app/vendor/php/zlib" "/app/vendor/libmcrypt" "/app/vendor/libicu"
+curl "http://${S3_BUCKET}.s3.amazonaws.com/package/libicu-51.tgz"
+tar xzv -C /app/vendor/libicu
+curl "http://${S3_BUCKET}.s3.amazonaws.com/package/libmcrypt-${mcrypt_version}.tgz"
+tar xzv -C /app/vendor/libmcrypt
+export LD_LIBRARY_PATH=/app/vendor/libicu/lib
+export PATH=/app/vendor/libicu/bin:\$PATH
+mkdir -p "/app/vendor/php/etc/conf.d"
+cd zlib-${PHP_ZLIB_VERSION} && 
+./configure --prefix=/app/vendor/php/zlib && make && make install
+cd ../php-${php_version}
 
-# configure pear
-pear config-set php_dir /app/vendor/php
-
-
-echo "+ Installing phpredis..."
-# install phpredis
-git clone git://github.com/nicolasff/phpredis.git
-pushd phpredis
-git checkout ${PHPREDIS_VERSION}
-
-phpize
-./configure
+./configure --prefix=/app/vendor/php \
+    --with-config-file-path=/app/vendor/php/etc \
+    --with-config-file-scan-dir=/app/vendor/php/etc/conf.d \
+    --enable-intl \
+    --with-gd \
+    --enable-shmop \
+    --enable-zip \
+    --with-jpeg-dir=/usr \
+    --with-png-dir=/usr \
+    --enable-exif \
+    --with-zlib=/app/vendor/php/zlib \
+    --with-bz2 \
+    --with-openssl \
+    --enable-soap \
+    --enable-xmlreader \
+    --with-xmlrpc \
+    --with-curl=/usr \
+    --with-xsl \
+    --enable-fpm \
+    --enable-mbstring \
+    --enable-pcntl \
+    --enable-sockets \
+    --enable-bcmath \
+    --with-readline \
+    --with-mcrypt=/app/vendor/libmcrypt \
+    --disable-debug \
+	--enable-opcache
 make && make install
-# add "extension=redis.so" to php.ini
-popd
 
-echo "+ Install newrelic..."
-curl -L "http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
-pushd newrelic-php5-${NEWRELIC_VERSION}-linux
-cp -f agent/x64/newrelic-`phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `php-config --extension-dir`/newrelic.so
-popd
+/app/vendor/php/bin/pear config-set php_dir /app/vendor/php
+$install_zend_optimizer
+yes '' | /app/vendor/php/bin/pecl install apcu-beta
+echo "extension=apcu.so" > /app/vendor/php/etc/conf.d/apcu.ini
 
-echo "+ Packaging PHP..."
-# package PHP
-echo ${PHP_VERSION} > /app/vendor/php/VERSION
+echo "-----> Uploading source to build server"
 
-popd
+"$basedir/manifest" php
+"$basedir/package-checksum" "php-${php_version}"
 
-cd /app/vendor/php
-tar -cvzf $tempdir/php-${PHP_VERSION}.tgz .
-
-"$basedir/checksum.sh" "$tempdir/php-${nginx_version}.tgz"
-
-echo "-----> Done building PHP package! saved as $tempdir/php-${phpversion}.tgz"
-
-echo "-----------------------------------------------"
-
-echo "---> Uploading package to FTP Server"
-while true; do
-    read -p "Do you wish to to Upload to FTP Server (y/n)?" yn
-    case ${yn} in
-        [Yy]* ) "$basedir/ftp-upload" "$tempdir/php-${PHP_VERSION}.tgz"; break;;
-        [Nn]* ) exit;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
-
+echo "-----> Done building PHP package!"

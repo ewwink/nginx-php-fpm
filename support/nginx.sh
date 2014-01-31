@@ -2,20 +2,17 @@
 
 set -e
 
-nginx_version="$1"
+NGINX_VERSION="$1"
 
 E_ARG_MISSING=127
 E_S3_BUCKET_MISSING=2
 
 basedir="$( cd -P "$( dirname "$0" )" && pwd )"
-
-## EDIT
-source ./set-env.sh
-## END EDIT
+source "$basedir/../support/set-env.sh"
 
 export PATH=${basedir}/../vendor/bin:$PATH
 
-if [ -z "$nginx_version" ]; then
+if [ -z "$NGINX_VERSION" ]; then
     echo "Usage: $0 <version>" >&2
     exit $E_ARG_MISSING
 fi
@@ -51,23 +48,23 @@ echo "-----> Downloading dependency zlib ${zlib_version}"
 curl -LO "http://zlib.net/zlib-${zlib_version}.tar.gz"
 tar -xzvf "zlib-${zlib_version}.tar.gz"
 
-echo "-----> Downloading NGINX ${nginx_version}"
+echo "-----> Downloading NGINX ${NGINX_VERSION}"
 
-curl -LO "http://nginx.org/download/nginx-${nginx_version}.tar.gz"
-tar -xzvf "nginx-${nginx_version}.tar.gz"
+curl -LO "http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz"
+tar -xzvf "nginx-${NGINX_VERSION}.tar.gz"
 
 echo "-----> Compiling Nginx"
 
-cd nginx-${nginx_version}
+cd nginx-${NGINX_VERSION}
 ./configure --prefix=/app/vendor/nginx --add-module=../headers-more-nginx-module-0.25 --with-http_ssl_module --with-pcre=../pcre-${pcre_version} --with-zlib=../zlib-${zlib_version} --with-http_ssl_module --with-http_gzip_static_module --with-http_stub_status_module
 make
 make install
 cd /app/vendor/nginx
-tar -cvzf $tempdir/nginx-${nginx_version}.tgz .
+tar -cvzf $tempdir/nginx-${NGINX_VERSION}.tgz .
 
-"$basedir/checksum.sh" "$tempdir/nginx-${nginx_version}.tgz"
+"$basedir/checksum.sh" "$tempdir/nginx-${NGINX_VERSION}.tgz"
 
-echo "-----> Done building NGINX package! saved as $tempdir/nginx-${nginx_version}.tgz"
+echo "-----> Done building NGINX package! saved as $tempdir/nginx-${NGINX_VERSION}.tgz"
 
 echo "-----------------------------------------------"
 
@@ -75,7 +72,7 @@ echo "---> Uploading package to FTP Server"
 while true; do
     read -p "Do you wish to to Upload to FTP Server (y/n)?" yn
     case ${yn} in
-        [Yy]* ) "$basedir/ftp-upload" "$tempdir/nginx-${nginx_version}.tgz"; break;;
+        [Yy]* ) "$basedir/ftp-upload" "$tempdir/nginx-${NGINX_VERSION}.tgz"; break;;
         [Nn]* ) exit;;
         * ) echo "Please answer yes or no.";;
     esac
