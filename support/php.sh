@@ -67,11 +67,24 @@ cd ../php-${PHP_VERSION}
     --with-readline \
     --with-mcrypt=/app/vendor/libmcrypt \
     --disable-debug \
-	--enable-opcache
-
-make && make install
-
+	--enable-opcache \
+&& make \
+&& make install \
 /app/vendor/php/bin/pear config-set php_dir /app/vendor/php
+
+echo "+ Installing phpredis..."
+# install phpredis
+git clone git://github.com/nicolasff/phpredis.git
+pushd phpredis
+git checkout ${PHPREDIS_VERSION}
+
+phpize
+./configure
+make && make install
+# add "extension=redis.so" to php.ini
+popd
+
+
 
 echo "-----> Uploading source to build server"
 
