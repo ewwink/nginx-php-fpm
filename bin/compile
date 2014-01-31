@@ -1,0 +1,295 @@
+#!/bin/bash
+# Usage: bin/compile <build-dir> <cache-dir>
+
+set -e
+set -o pipefail
+
+# START CONFIG
+NGINX_VERSION=1.4.1
+LIBMCRYPT_VERSION=2.5.8
+LIBMEMCACHED_VERSION=1.0.7
+PHP_VERSION=5.4.17
+NEWRELIC_VERSION=2.9.5.78
+S3_BUCKET=heroku-buildpack-php-tyler
+# END CONFIG
+
+#
+S3_URL="https://s3.amazonaws.com/${S3_BUCKET}"
+
+MANIFEST_FILE="manifest.md5sum"
+NGINX_FILE="nginx-${NGINX_VERSION}-heroku.tar.gz"
+MCRYPT_FILE="libmcrypt-${LIBMCRYPT_VERSION}.tar.gz"
+MEMCACHED_FILE="libmemcached-${LIBMEMCACHED_VERSION}.tar.gz"
+PHP_FILE="php-${PHP_VERSION}-with-fpm-heroku.tar.gz"
+NEWRELIC_FILE="newrelic-${NEWRELIC_VERSION}-heroku.tar.gz"
+
+MANIFEST_URL="${S3_URL}/${MANIFEST_FILE}"
+NGINX_URL="${S3_URL}/${NGINX_FILE}"
+MCRYPT_URL="${S3_URL}/${MCRYPT_FILE}"
+MEMCACHED_URL="${S3_URL}/${MEMCACHED_FILE}"
+PHP_URL="${S3_URL}/${PHP_FILE}"
+NEWRELIC_URL="${S3_URL}/${NEWRELIC_FILE}"
+COMPOSER_URL="http://getcomposer.org/composer.phar"
+#
+
+function indent() {
+	c='s/^/       /'
+	case $(uname) in
+		Darwin) sed -l "$c";;
+		*)      sed -u "$c";;
+	esac
+}
+
+function check_md5() {
+	SUMS_FILE="${BUNDLE_DIR}/${MANIFEST_FILE}"
+	TARGET="$1"
+	SUM=`cat "${SUMS_FILE}" | grep "${TARGET}" | cut -d ' ' -f 1`
+	OUTPUT=`md5sum ${BUNDLE_DIR}/${TARGET} | cut -d ' ' -f 1`
+	! [ "$SUM" = "$OUTPUT" ]
+}
+
+function download_url() {
+	TARGET_URL="$1"
+	curl -s -S -O -L -m 300 --connect-timeout 60 "$TARGET_URL"
+}
+
+BIN_DIR=$(dirname $0)
+BUILD_DIR=$1
+CACHE_DIR=$2
+BUNDLE_DIR="${CACHE_DIR}/bundles"
+LP_DIR=`cd $(dirname $0); cd ..; pwd`
+export COMPOSER_HOME="${CACHE_DIR}/.composer"
+
+# include .files when moving things around
+shopt -s dotglob
+
+mkdir -p $BUILD_DIR $CACHE_DIR ${BUNDLE_DIR} ${BUILD_DIR}/local ${BUILD_DIR}/vendor/bin ${COMPOSER_HOME} ${BUILD_DIR}/.profile.d
+
+pushd ${BUNDLE_DIR} > /dev/null
+
+if [ -n "`find . -type f -atime +30`" ]
+then
+	echo "-----> Pruning Unused Cached Bundles"
+	find . -type f -atime +30 -delete | indent
+fi
+
+echo "-----> Fetching Manifest"
+echo ${MANIFEST_URL} | indent
+download_url ${MANIFEST_URL}
+
+# Nginx
+echo "-----> Installing Nginx"
+if [ -f "${NGINX_FILE}" ]
+then
+	# check manifest
+	if check_md5 "${NGINX_FILE}"
+	then
+		echo "Bundling Nginx v${NGINX_VERSION}" | indent
+		echo ${NGINX_URL} | indent
+		download_url ${NGINX_URL}
+	else
+		echo "Using cached Nginx v${NGINX_VERSION}" | indent
+	fi
+else
+	# fetch
+	echo "Bundling Nginx v${NGINX_VERSION}" | indent
+	echo ${NGINX_URL} | indent
+	download_url ${NGINX_URL}
+fi
+
+mkdir -p ${BUILD_DIR}/vendor/nginx
+tar xzf ${NGINX_FILE} -C ${BUILD_DIR}/vendor/nginx
+
+# libmcrypt
+echo "-----> Installing libmcrypt"
+if [ -f "${MCRYPT_FILE}" ]
+then
+	if check_md5 "${MCRYPT_FILE}"
+	then
+		echo "Bundling libmcrypt v${LIBMCRYPT_VERSION}" | indent
+		echo ${MCRYPT_URL} | indent
+		download_url ${MCRYPT_URL}
+	else
+		echo "Using cached libmcrypt v${LIBMCRYPT_VERSION}" | indent
+	fi
+else
+	echo "Bundling libmcrypt v${LIBMCRYPT_VERSION}" | indent
+	echo ${MCRYPT_URL} | indent
+	download_url ${MCRYPT_URL}
+fi
+
+tar xzf ${MCRYPT_FILE} -C ${BUILD_DIR}/local
+
+# libmemcached
+echo "-----> Installing libmemcached"
+if [ -f "${MEMCACHED_FILE}" ]
+then
+	if check_md5 "${MEMCACHED_FILE}"
+	then
+		echo "Bundling libmemcached v${LIBMEMCACHED_VERSION}" | indent
+		echo ${MEMCACHED_URL} | indent
+		download_url ${MEMCACHED_URL}
+	else
+		echo "Using cached libmemcached v${LIBMEMCACHED_VERSION}" | indent
+	fi
+else
+	echo "Bundling libmemcached v${LIBMEMCACHED_VERSION}" | indent
+	echo ${MEMCACHED_URL} | indent
+	download_url ${MEMCACHED_URL}
+fi
+
+tar xzf ${MEMCACHED_FILE} -C ${BUILD_DIR}/local
+
+# PHP
+echo "-----> Installing PHP"
+if [ -f "$PHP_FILE" ]
+then
+	if check_md5 "${PHP_FILE}"
+	then
+		echo "Bundling PHP v${PHP_VERSION}" | indent
+		echo ${PHP_URL} | indent
+		download_url ${PHP_URL}
+	else
+		echo "Using cached PHP v${PHP_VERSION}" | indent
+	fi
+else
+	echo "Bundling PHP v${PHP_VERSION}" | indent
+	echo ${PHP_URL} | indent
+	download_url ${PHP_URL}
+fi
+
+mkdir -p ${BUILD_DIR}/vendor/php
+tar xzf ${PHP_FILE} -C ${BUILD_DIR}/vendor/php
+export PATH="${PATH}:${BUILD_DIR}/vendor/php/bin"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${BUILD_DIR}/local/lib"
+
+# newrelic
+echo "-----> Installing newrelic"
+if [ -f "${NEWRELIC_FILE}" ]
+then
+	if check_md5 "${NEWRELIC_FILE}"
+	then
+		echo "Bundling newrelic daemon v${NEWRELIC_VERSION}" | indent
+		echo ${NEWRELIC_URL} | indent
+		download_url ${NEWRELIC_URL}
+	else
+		echo "Using cached newrelic daemon v${NEWRELIC_VERSION}" | indent
+	fi
+else
+	echo "Bundling newrelic daemon v${NEWRELIC_VERSION}" | indent
+	echo ${NEWRELIC_URL} | indent
+	download_url ${NEWRELIC_URL}
+fi
+
+tar xzf ${NEWRELIC_FILE} -C ${BUILD_DIR}/local
+
+popd > /dev/null
+
+# Composer Installation
+pushd ${BUILD_DIR} > /dev/null
+if [ -f "composer.json" ]
+then
+	echo "-----> Installing dependencies using Composer"
+	GIT_DIR_ORIG=${GIT_DIR}
+	unset GIT_DIR
+
+	if [ ! -f "composer.phar" ]
+	then
+		echo "Fetching composer.phar" | indent
+		echo ${COMPOSER_URL} | indent
+		download_url ${COMPOSER_URL}
+	fi
+
+	# do the deed!
+	echo "Running: php composer.phar install" | indent
+	LD_LIBRARY_PATH="${BUILD_DIR}/local/lib" ${BUILD_DIR}/vendor/php/bin/php composer.phar install -n | indent
+
+	export GIT_DIR=${GIT_DIR_ORIG}
+fi
+popd > /dev/null
+
+# Config files
+echo "-----> Copying config files"
+cp $LP_DIR/conf/php-fpm.conf ${BUILD_DIR}/vendor/php/etc/php-fpm.conf
+cp ${BUILD_DIR}/vendor/php/php/fpm/status.html ${BUILD_DIR}/status.html
+cp $LP_DIR/conf/php.ini ${BUILD_DIR}/vendor/php/php.ini
+cp -a $LP_DIR/conf/etc.d ${BUILD_DIR}/vendor/php/
+cp $LP_DIR/conf/nginx.conf.erb ${BUILD_DIR}/vendor/nginx/conf/nginx.conf.erb
+cp -n ${LP_DIR}/.profile.d/* ${BUILD_DIR}/.profile.d/
+#erb $LP_DIR/conf/nginx.conf.erb > ${BUILD_DIR}/vendor/nginx/conf/nginx.conf
+
+echo "-----> Installing boot script"
+cd $BUILD_DIR
+cat >>boot.sh <<EOF
+#!/usr/bin/env bash
+
+echo "Booting nginx"
+
+# Override config files if provided in app.
+if [ -d /app/conf ]; then
+
+	mkdir -p /app/conf/nginx.d
+
+	if [ -d /app/conf/etc.d ]; then
+		cp -f /app/conf/etc.d/* /app/vendor/php/etc.d/
+	fi
+
+	if [ -r /app/conf/php-fpm.conf ]; then
+		cp -f /app/conf/php-fpm.conf /app/vendor/php/etc/php-fpm.conf
+	fi
+
+	if [ -r /app/conf/php.ini ]; then
+		cp -f /app/conf/php.ini /app/vendor/php/php.ini
+	fi
+
+	if [ -r /app/conf/nginx.conf.erb ]; then
+		cp -f /app/conf/nginx.conf.erb /app/vendor/nginx/conf/nginx.conf.erb
+	fi
+
+fi
+
+# Set correct port variable.
+erb /app/vendor/nginx/conf/nginx.conf.erb > /app/vendor/nginx/conf/nginx.conf
+
+if [ -d /app/conf/nginx.d ]; then
+	# Parse .erb into .conf.
+	for f in /app/conf/nginx.d/*.erb
+	do
+		if [ -r "\${f}" ];
+		then
+			erb "\${f}" > "\${f}.conf"
+		fi
+	done
+fi
+
+# Set NEWRELIC key
+if [ -x "/app/local/bin/newrelic-license" ]; then
+	/app/local/bin/newrelic-license
+fi
+
+# Preserve current php-fpm.conf so that env list does
+# not go out of hand across restarts.
+if [ -r /app/vendor/php/etc/php-fpm.conf.current ]; then
+	cp -f /app/vendor/php/etc/php-fpm.conf.current /app/vendor/php/etc/php-fpm.conf
+else
+	cp -f /app/vendor/php/etc/php-fpm.conf /app/vendor/php/etc/php-fpm.conf.current
+fi
+
+# Expose Heroku config vars to PHP-FPM processes
+for var in \`env | cut -f1 -d=\`; do
+	echo "env[\$var] = \\$\${var}" >> /app/vendor/php/etc/php-fpm.conf
+done
+
+touch /app/vendor/nginx/logs/access.log /app/vendor/nginx/logs/error.log /app/vendor/php/var/log/php-fpm.log /app/vendor/php/var/log/php-errors.log /app/local/var/log/newrelic/newrelic-daemon.log /app/local/var/log/newrelic/php_agent.log
+mkdir -p client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp
+(tail -f -n 0 /app/vendor/nginx/logs/*.log /app/vendor/php/var/log/*.log /app/local/var/log/newrelic/*.log &)
+
+if [ "\${NEW_RELIC_LICENSE_KEY}" ]; then
+	/app/local/bin/newrelic-daemon -c /app/local/etc/newrelic.cfg -d error
+fi
+/app/vendor/php/sbin/php-fpm
+/app/vendor/nginx/sbin/nginx
+EOF
+chmod +x boot.sh
+
+echo "-----> Done with compile"
