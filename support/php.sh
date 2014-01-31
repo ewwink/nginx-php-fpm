@@ -35,21 +35,6 @@ echo "-----> Downloading PHP $php_version"
 curl -LO "http://php.net/distributions/php-${php_version}.tar.gz"
 tar -xzvf "php-${php_version}.tar.gz"
 
-install_zend_optimizer=":"
-
-if [[ "$php_version" =~ 5.5 ]]; then
-    install_zend_optimizer=$(cat << SH
-    echo "zend_extension=opcache.so" >> /app/vendor/php/etc/conf.d/opcache.ini
-SH
-)
-else
-    install_zend_optimizer=$(cat <<SH
-    /app/vendor/php/bin/pecl install ZendOpcache-beta \
-        && echo "zend_extension=\$(/app/vendor/php/bin/php-config --extension-dir)/opcache.so" >> /app/vendor/php/etc/conf.d/opcache.ini
-SH
-)
-fi
-
 mkdir -p "/app/vendor/php/zlib" "/app/vendor/libmcrypt" "/app/vendor/libicu"
 curl "http://${S3_BUCKET}.s3.amazonaws.com/package/libicu-51.tgz"
 tar xzv -C /app/vendor/libicu
@@ -89,16 +74,30 @@ cd ../php-${php_version}
     --with-mcrypt=/app/vendor/libmcrypt \
     --disable-debug \
 	--enable-opcache
+
 make && make install
 
 /app/vendor/php/bin/pear config-set php_dir /app/vendor/php
-$install_zend_optimizer
-yes '' | /app/vendor/php/bin/pecl install apcu-beta
-echo "extension=apcu.so" > /app/vendor/php/etc/conf.d/apcu.ini
 
 echo "-----> Uploading source to build server"
 
-"$basedir/manifest" php
-"$basedir/package-checksum" "php-${php_version}"
+cd /app/vendor/php
+tar -cvzf $tempdir/php-${php_version}.tgz .
+
+"$basedir/checksum.sh" "$tempdir/php-${php_version}.tgz"
+
+echo "-----> Done building PHP package! saved as $tempdir/php-${php_version}.tgz"
+
+echo "-----------------------------------------------"
+
+echo "---> Uploading package to FTP Server"
+while true; do
+    read -p "Do you wish to to Upload to FTP Server (y/n)?" yn
+    case ${yn} in
+        [Yy]* ) "$basedir/ftp-upload" "$tempdir/php-${php_version}.tgz"; break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
 
 echo "-----> Done building PHP package!"
