@@ -56,7 +56,7 @@ tar -xzvf "nginx-${NGINX_VERSION}.tar.gz"
 echo "-----> Compiling Nginx"
 
 cd nginx-${NGINX_VERSION}
-./configure --prefix=/app/vendor/nginx --add-module=../headers-more-nginx-module-0.25 --with-http_ssl_module --with-pcre=../pcre-${pcre_version} --with-zlib=../zlib-${zlib_version} --with-http_ssl_module --with-http_gzip_static_module --with-http_stub_status_module
+./configure --prefix=/app/vendor/nginx --add-module=../headers-more-nginx-module-0.25 --with-pcre=../pcre-${pcre_version} --with-zlib=../zlib-${zlib_version} --with-http_ssl_module --with-http_gzip_static_module --with-http_stub_status_module
 make
 make install
 cd /app/vendor/nginx
