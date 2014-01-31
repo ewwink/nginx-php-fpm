@@ -11,7 +11,7 @@ source "$basedir/../support/set-env.sh"
 # END CONFIG
 
 #
-FTP_URL="http://${FTP_HOST}${FTP_DIR}"
+FTP_URL="http://${FTP_HOST}/nginx-php-fpm"
 
 MANIFEST_FILE="manifest.md5sum"
 NGINX_FILE="nginx-${NGINX_VERSION}.tgz"
