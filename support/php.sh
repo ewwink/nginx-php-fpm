@@ -7,12 +7,11 @@ source "$basedir/../support/set-env.sh"
 
 export PATH=${basedir}/../vendor/bin:$PATH
 
-if [ -z "$1" ]; then
+if [ -z "$PHP_VERSION" ]; then
     echo "Usage: $0 <version>" >&2
     exit 1
 fi
 
-PHP_VERSION="$1"
 mcrypt_version="2.5.8"
 
 if [ -z "$PHP_ZLIB_VERSION" ]; then
