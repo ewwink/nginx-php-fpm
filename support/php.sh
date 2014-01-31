@@ -63,7 +63,7 @@ cd ../php-${PHP_VERSION}
     --disable-debug \
 	--enable-opcache \
 	--with-mysqli \
-	--with-mysqlnd \
+	--enable-mysqlnd \
 	--enable-session \
 	--enable-json \
 	--enable-filter \ 
