@@ -66,7 +66,8 @@ cd ../php-${PHP_VERSION}
 			--enable-libxml
 
 make 
-make install /app/vendor/php/bin/pear config-set php_dir /app/vendor/php
+make install
+/app/vendor/php/bin/pear config-set php_dir /app/vendor/php
 
 echo "+ Installing phpredis..."
 # install phpredis
