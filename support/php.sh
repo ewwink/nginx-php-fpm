@@ -68,7 +68,10 @@ cd ../php-${PHP_VERSION}
 
 make 
 make install
-/app/vendor/php/bin/pear config-set php_dir /app/vendor/php
+
+export PATH=/app/vendor/php/bin:$PATH
+
+#/app/vendor/php/bin/pear config-set php_dir /app/vendor/php
 
 echo "+ Installing phpredis..."
 # install phpredis
@@ -99,7 +102,7 @@ echo "---> Uploading package to FTP Server"
 while true; do
     read -p "Do you wish to to Upload to FTP Server (y/n)?" yn
     case ${yn} in
-        [Yy]* ) "$basedir/ftp-upload.sh" "$tempdir/php-${PHP_VERSION}-with-fpm.tgz"; break;;
+        [Yy]* ) "$basedir/ftp-upload.sh" "$tempdir/php-${PHP_VERSION}-with-fpm.tgz"; break;
         [Nn]* ) exit;;
         * ) echo "Please answer yes or no.";;
     esac

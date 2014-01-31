@@ -12,11 +12,11 @@ if [ ${FTP_USER} ] && [ ${FTP_PASS} ]; then
 	curl -v -T ${package} ftp://${FTP_HOST}${FTP_DIR} --user ${FTP_USER}:${FTP_PASS}
 	echo "-----> File Uploading complete to re-run ftp-upload run command below"
 	echo ""
-	echo "support/ftp-upload ${package}"
+	echo "support/ftp-upload.sh ${package}"
 	echo ""
 else
 	echo "FTP User or Password is empty, File Uploading cancelled... to re-run ftp-upload run command below"
 	echo ""
-	echo "support/ftp-upload ${package}"
+	echo "support/ftp-upload.sh ${package}"
 	echo ""
 fi
