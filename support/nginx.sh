@@ -35,6 +35,7 @@ cd $tempdir
 
 echo "-----> Downloading dependency PCRE ${pcre_version}"
 
+
 curl -LO "http://sourceforge.net/projects/pcre/files/pcre/${pcre_version}/pcre-${pcre_version}.tar.gz"
 tar -xzvf "pcre-${pcre_version}.tar.gz"
 
@@ -55,7 +56,7 @@ tar -xzvf "nginx-${nginx_version}.tar.gz"
 echo "-----> Compiling Nginx"
 
 cd nginx-${nginx_version}
-./configure --prefix=/app/vendor/nginx --add-module=../headers-more-nginx-module-0.25 --with-http_ssl_module --with-pcre=../pcre-${pcre_version} --with-zlib=../zlib-${zlib_version}
+./configure --prefix=/app/vendor/nginx --add-module=../headers-more-nginx-module-0.25 --with-http_ssl_module --with-pcre=../pcre-${pcre_version} --with-zlib=../zlib-${zlib_version} --with-http_ssl_module --with-http_gzip_static_module --with-http_stub_status_module
 make
 make install
 cd /app/vendor/nginx
