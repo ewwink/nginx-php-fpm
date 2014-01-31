@@ -75,7 +75,7 @@ echo "+ Configuring PHP..."
 --with-png-dir \
 --with-freetype-dir=/app/local \
 --with-zlib \
---with-opcache
+--enable-opcache
 
 echo "+ Compiling PHP..."
 # build & install it
